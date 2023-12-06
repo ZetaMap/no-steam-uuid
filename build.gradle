@@ -2,6 +2,7 @@ apply plugin: "java"
 
 version '1.0'
 
+sourceSets.main.java.srcDirs = ["src"]
 sourceCompatibility = 1.8
 
 repositories{
@@ -22,7 +23,12 @@ dependencies{
 jar{
     archiveFileName = "no-steam-uuid.jar"
     version=null
+
     from{
         configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+    }
+
+    from(rootDir){
+        include "mod.json"
     }
 }
