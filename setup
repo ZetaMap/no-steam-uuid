@@ -1,3 +1,0 @@
-./gradlew :build
-mv -f build/libs/*.jar .
-rm -rf build

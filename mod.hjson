@@ -1,0 +1,13 @@
+name: no-steam-uuid
+displayName: No Steam UUID
+author: ZetaMap
+main: fr.zetamap.nosteamuuid.Main
+description: '''
+A mod that prevents the steam version from creating another uuid, when importing your save from another version.
+
+[lightgray]Note: This mod does nothing if your client is not the steam version.[]
+'''
+version: "1.1"
+hidden: true
+java: true
+minGameVersion: "147"

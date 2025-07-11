@@ -1,34 +1,52 @@
-apply plugin: "java"
+import com.xpdustry.toxopid.spec.ModMetadata
+import com.xpdustry.toxopid.spec.ModPlatform
 
-version '1.0'
-
-sourceSets.main.java.srcDirs = ["src"]
-sourceCompatibility = 1.8
-
-repositories{
-    mavenCentral()
-    maven{ url 'https://www.jitpack.io' }
+plugins {
+  id "java"
+  id "com.xpdustry.toxopid" version "4.1.2"
 }
 
-ext{
-    //the build number that this plugin is made for
-    mindustry   = 'v146'
+def metadata = ModMetadata.fromJson(file("mod.hjson"))
+group = "fr.zetamap"
+version = metadata.version
+description = metadata.description
+
+repositories {
+  mavenCentral()
+  maven { url "https://maven.xpdustry.com/mindustry" }
+  maven { url "https://www.jitpack.io" }
 }
 
-dependencies{
-    compileOnly "com.github.Anuken.Arc:arc-core:$mindustry"
-    compileOnly "com.github.Anuken.Mindustry:core:$mindustry"
+toxopid {
+  compileVersion = "v${metadata.minGameVersion}"
+  platforms = [ModPlatform.SERVER]
 }
 
-jar{
-    archiveFileName = "no-steam-uuid.jar"
-    version=null
+dependencies {
+  compileOnly toxopid.dependencies.arcCore
+  compileOnly toxopid.dependencies.mindustryCore
+}
 
-    from{
-        configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+// Force compilation to Java 8
+tasks.withType(JavaCompile) {
+  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  options.encoding = "UTF-8"
+  options.compilerArgs.addAll(['--release', '8'])
+}
+
+jar {
+  archiveFileName = "${metadata.name}.jar"
+
+  from(rootDir) {
+    include "mod.hjson"
+  }
+
+  //copy the builded jar to the working directory
+  doLast {
+    copy {
+      from jar
+      into rootDir
     }
-
-    from(rootDir){
-        include "mod.json"
-    }
+  }
 }
