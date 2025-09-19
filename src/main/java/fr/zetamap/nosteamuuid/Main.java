@@ -32,16 +32,17 @@ import arc.struct.Seq;
 
 import mindustry.ClientLauncher;
 import mindustry.Vars;
+import mindustry.mod.Mod;
 import mindustry.net.Net;
 import mindustry.type.Publishable;
 
 
-public class Main extends mindustry.mod.Mod {
+public class Main extends Mod {
   static { 
     // Ignore if it's not the steam version
     if (Vars.steam) {
-      // Assume this is at least a {@link mindustry.ClientLauncher} since only this class sets this field.
-      final ClientLauncher original = (ClientLauncher) Vars.platform;
+      // Assume this is at least a {@link mindustry.ClientLauncher} since only this class set this field.
+      final ClientLauncher original = (ClientLauncher)Vars.platform;
       
       Vars.platform = new ClientLauncher() {
         // Methods from {@link mindustry.ClientLauncher}
@@ -62,7 +63,8 @@ public class Main extends mindustry.mod.Mod {
         public void inviteFriends() { original.inviteFriends(); }
         public void updateLobby() { original.updateLobby(); }
         public void updateRPC() { original.updateRPC(); }
-        // And keeps method from {@link mindustry.core.Platform#getUUID()}
+        
+        // Not overridden to keep method from {@link mindustry.core.Platform#getUUID()}
         //public String getUUID() { return original.getUUID(); }
       };   
     }
