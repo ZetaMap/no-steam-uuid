@@ -10,8 +10,8 @@ A mod that prevents the steam version from creating another uu​id, when import
 
 [lightgray]Note: This mod does nothing if your client is not the steam version.[]
 '''
-version: "1.2"
-minGameVersion: "150"
+version: "1.2.1"
+minGameVersion: "154"
 hidden: true
 java: true
 repo: ZetaMap/no-steam-uuid
