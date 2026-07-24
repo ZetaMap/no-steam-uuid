@@ -1,17 +1,18 @@
-// I need to obfuscate 'uuid' because it's a banned word in displayName and description. 
-// (there is an invisible char between 'u' and 'i')
+// I need to obfuscate 'uuid' because it's a banned word in 'displayName' and 'description'. 
+// There is an invisible character between 'u' and 'i'.
 name: no-steam-uuid
 displayName: No Steam UU​ID
 subtitle: Acts only when using the Steam version.
 author: ZetaMap
 main: fr.zetamap.nosteamuuid.Main
 description: '''
-A mod that prevents the steam version from creating another uu​id, when importing your save from another version.
+A mod that prevents the Steam version from creating another UUID, when importing your save from the Itch, GitHub, Android or iOS version.
 
-[lightgray]Note: This mod does nothing if your client is not the steam version.[]
+[lightgray]Note: The mod does nothing if your client is not the Steam version.[]
 '''
-version: "1.2.1"
-minGameVersion: "154"
+version: 1.3
+minGameVersion: 159.6
+legacyCompatible: true // Pretty much compatible with all versions of the game later than v5 b102.
 hidden: true
 java: true
 repo: ZetaMap/no-steam-uuid
