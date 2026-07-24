@@ -23,8 +23,9 @@ jobs:
       - name: Fetch 'Vars.minJavaModGameVersion' number
         id: fetch
         run: |
+          set -e
           VERSION=$(curl -Ls "https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/Vars.java?raw=true" |
-                    grep -Po "^.*int minJavaModGameVersion = \K\d+\.?\d*")
+                    grep -Po "^.*int minJavaModGameVersion = \K[0-9.]+")
           if [ -z "$VERSION" ]; then
             echo "Error: Failed to parse 'Vars.minJavaModGameVersion' number. Exiting."
             exit 1
@@ -35,10 +36,11 @@ jobs:
       - name: Check version
         id: check
         run: |
-          CURRENT=$(grep -Po "minGameVersion:\s*\K\d+\.?\d*" mod.hjson)
+          set -e
+          CURRENT=$(grep -Po "minGameVersion:\s*\K[0-9.]+" mod.hjson)
           echo "minGameVersion = $CURRENT"
-          if [ "${{ steps.fetch.outputs.version }}" -le "$CURRENT" ]; then
-            echo "Vars.minJavaModGameVersion <= minGameVersion ($CURRENT_MIN_GAME). No update required."
+          if [ "$(awk 'BEGIN{print (${{ steps.fetch.outputs.version }} > '$CURRENT')}')" -ne 1 ]; then
+            echo "Vars.minJavaModGameVersion <= minGameVersion. No update required."
             echo "update=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -49,8 +51,9 @@ jobs:
         id: update
         if: steps.check.outputs.update == 'true'
         run: |
+          set -e
           echo "Updating Mindustry requierements..."
-          VERSION=$(grep -Po "version:\s*\K\d+(\.\d+)*" mod.hjson)
+          VERSION=$(grep -Po "version:\s*\K[0-9.]+" mod.hjson)
           if [ "$(echo "$VERSION" | tr -cd . | wc -c)" -ne 1 ]; then
             NEW_VERSION="${VERSION}.1"
           else
@@ -89,9 +92,8 @@ jobs:
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ needs.check-and-update.outputs.new_version }}" \
-            $(find "${{ steps.download_artifact.outputs.download-path }}" -type f -name "*.jar") \
-            --title "Updated Mindustry compatibility" \
-            --notes "Bumped \`minGameVersion\` to \`${{ needs.check-and-update.outputs.version }}\`." \
-            --latest
+        run: gh release create "${{ needs.check-and-update.outputs.new_version }}" \
+                $(find "${{ steps.download_artifact.outputs.download-path }}" -type f -name "*.jar") \
+                --title "Updated Mindustry compatibility" \
+                --notes "Bumped \`minGameVersion\` to \`${{ needs.check-and-update.outputs.version }}\`." \
+                --latest
