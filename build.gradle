@@ -19,19 +19,28 @@ repositories {
 }
 
 toxopid {
-  compileVersion = "v${metadata.minGameVersion}"
+  // Use the latest Java 8 version, 
+  // as Anuke switched to Java 17 and we want to be compatible with all versions.
+  compileVersion = "v158" //"v${metadata.minGameVersion}"
   platforms = [ModPlatform.DESKTOP]
 }
 
 compileJava {
-  targetCompatibility = JavaVersion.VERSION_17
-  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_1_8
   options.encoding = "UTF-8"
-  options.release = 17
+  options.release = 8
+}
+
+// Desktop target is not exported to maven repos
+sourceSets {
+  stub.java.srcDir "stub"
 }
 
 dependencies {
   compileOnly toxopid.dependencies.mindustryCore
+  stubCompileOnly toxopid.dependencies.mindustryCore
+  compileOnly sourceSets.stub.output
 }
 
 processResources.from(rootDir) {
@@ -59,8 +68,8 @@ signing {
 
 indra {
   javaVersions {
-    target(17)
-    minimumToolchain(17)
+    target(8)
+    minimumToolchain(8)
   }
     
   mitLicense()

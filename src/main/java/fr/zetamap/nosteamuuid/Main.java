@@ -55,7 +55,7 @@ public class Main extends Mod {
 
     // Suppress values to avoid double desktop initialization
     System.setProperty("nodiscord", "true");
-    boolean was64Bit = OS.is64Bit; // >b105 only checking for this field
+    boolean was64Bit = OS.is64Bit; // >b105 are only checking for this field
     OS.is64Bit = false;
     try { Version.isSteam = false; } // Doesn't exists in >b156
     catch (NoSuchFieldError ignored) {}
@@ -74,7 +74,7 @@ public class Main extends Mod {
       public void init() { original.init(); }
       public void resume(){ original.resume(); }
       public void pause() { original.pause(); }
-      // Redirect method because it uses an internal field
+      // Redirect this one because it uses an internal field
       public void updateRPC() { original.updateRPC(); }
 
       public String getUUID() {
