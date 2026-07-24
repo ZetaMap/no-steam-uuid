@@ -56,7 +56,8 @@ jobs:
           else
             NEW_VERSION="$(echo "$VERSION" | cut -d. -f1,2).$(($(echo "$VERSION" | cut -d. -f3) + 1))"
           fi
-          sed 's/\(minGameVersion:\s*\).*/\11234/;s/\(version:\s*\).*/\11.2.3..4/' mod.hjson
+          sed -i -e "s/\(minGameVersion:\s*\).*/\1${{ steps.fetch.outputs.version }}/" \
+                 -e "s/\(version:\s*\).*/\1$NEW_VERSION/" mod.hjson
           echo "minGameVersion = ${{ steps.check.outputs.current }} --> ${{ steps.fetch.outputs.version }}"
           echo "version = $VERSION --> $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -70,7 +71,7 @@ jobs:
   build:
     needs: check-and-update
     if: needs.check-and-update.outputs.update == 'true'
-    uses: .github/workflows/build.yml
+    uses: ./.github/workflows/build.yml
     secrets: inherit
 
   release:
