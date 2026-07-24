@@ -7,6 +7,8 @@ on:
   pull_request:
   release:
     types: [published, edited]
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
@@ -14,7 +16,7 @@ jobs:
     # Only run on PRs if the source branch is on someone else's repo
     if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -24,7 +26,7 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-          
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -32,9 +34,9 @@ jobs:
 
       - name: Build Artifact
         run: gradle build
-        
+
       - name: Upload Artifact to Actions
-        uses: actions/upload-artifact@7
+        uses: actions/upload-artifact@v7
         with:
           path: build/libs/${{ github.event.repository.name }}.jar
           archive: false

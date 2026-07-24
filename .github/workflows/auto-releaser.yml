@@ -1,0 +1,96 @@
+name: Auto Releaser
+
+on:
+  schedule:
+    - cron: 0 0 */2 * *
+  workflow_dispatch:
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+      version: ${{ steps.fetch.outputs.version }}
+      new_version: ${{ steps.update.outputs.version }}
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Fetch 'Vars.minJavaModGameVersion' number
+        id: fetch
+        run: |
+          VERSION=$(curl -Ls "https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/Vars.java?raw=true" |
+                    grep -Po "^.*int minJavaModGameVersion = \K\d+\.?\d*")
+          if [ -z "$VERSION" ]; then
+            echo "Error: Failed to parse 'Vars.minJavaModGameVersion' number. Exiting."
+            exit 1
+          fi
+          echo "Vars.minJavaModGameVersion = $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check version
+        id: check
+        run: |
+          CURRENT=$(grep -Po "minGameVersion:\s*\K\d+\.?\d*" mod.hjson)
+          echo "minGameVersion = $CURRENT"
+          if [ "${{ steps.fetch.outputs.version }}" -le "$CURRENT" ]; then
+            echo "Vars.minJavaModGameVersion <= minGameVersion ($CURRENT_MIN_GAME). No update required."
+            echo "update=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "update=true" >> $GITHUB_OUTPUT
+
+      - name: Update versions
+        id: update
+        if: steps.check.outputs.update == 'true'
+        run: |
+          echo "Updating Mindustry requierements..."
+          VERSION=$(grep -Po "version:\s*\K\d+(\.\d+)*" mod.hjson)
+          if [ "$(echo "$VERSION" | tr -cd . | wc -c)" -ne 1 ]; then
+            NEW_VERSION="${VERSION}.1"
+          else
+            NEW_VERSION="$(echo "$VERSION" | cut -d. -f1,2).$(($(echo "$VERSION" | cut -d. -f3) + 1))"
+          fi
+          sed 's/\(minGameVersion:\s*\).*/\11234/;s/\(version:\s*\).*/\11.2.3..4/' mod.hjson
+          echo "minGameVersion = ${{ steps.check.outputs.current }} --> ${{ steps.fetch.outputs.version }}"
+          echo "version = $VERSION --> $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push changes
+        if: steps.check.outputs.update == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: updated minGameVersion to ${{ steps.fetch.outputs.version }}"
+
+  build:
+    needs: check-and-update
+    if: needs.check-and-update.outputs.update == 'true'
+    uses: .github/workflows/build.yml
+    secrets: inherit
+
+  release:
+    needs: [check-and-update, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download Build Artifact
+        id: download_artifact
+        uses: actions/download-artifact@v8
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ needs.check-and-update.outputs.new_version }}" \
+            $(find "${{ steps.download_artifact.outputs.download-path }}" -type f -name "*.jar") \
+            --title "Updated Mindustry compatibility" \
+            --notes "Bumped \`minGameVersion\` to \`${{ needs.check-and-update.outputs.version }}\`." \
+            --latest
